@@ -1,10 +1,11 @@
 import React from "react";
 import { Camera } from "./Camera";
-import { Canvas } from "./Canvas";
+import { Canvas, HandGizmoConfig } from "./Canvas";
 import { CustomHand, HandState } from "./hands";
 import { HandModels } from "./models";
 import { tensor2d, Tensor } from "@tensorflow/tfjs";
 import { clickElementByCoordinates } from "./utils";
+import { CanvasDrawingState, DrawObjectState } from "./drawings";
 
 interface Props {
   onPoseChange?: (pose: string) => void;
@@ -14,12 +15,15 @@ interface Props {
   onDrop?: (hand: HandState, x: number, y: number) => void;
   showMiniCamera?: boolean;
   passThroughPinchAsClick?: boolean;
+  showFeedback?: boolean;
+  handGizmoConfig?: HandGizmoConfig;
 }
 
 interface State {
   hands: HandState[];
   poses: string[];
   loaded: boolean;
+  canvasObjects: DrawObjectState[];
 }
 
 export class HandController extends React.Component<Props, State> {
@@ -27,7 +31,8 @@ export class HandController extends React.Component<Props, State> {
     hands: [],
     poses: [],
     loaded: false,
-  };
+    canvasObjects: [],
+  } as State;
   cameraWidth = 120;
   cameraHeight = 80;
   canvasWidth = document.body.offsetWidth;
@@ -39,6 +44,8 @@ export class HandController extends React.Component<Props, State> {
     Right: new HandState(),
   };
 
+  drawings: CanvasDrawingState = new CanvasDrawingState();
+
   constructor(props: Props) {
     super(props);
     this.cameraWidth = this.canvasWidth * 0.1;
@@ -46,13 +53,17 @@ export class HandController extends React.Component<Props, State> {
 
     [this.hands.Left, this.hands.Right].forEach((hand) => {
       hand.onPoseChange = this.props.onPoseChange;
-      hand.onPinch = this.props.passThroughPinchAsClick
-        ? this.onPinch
-        : this.props.onPinch;
-      hand.onDragStart = this.props.onDragStart;
-      hand.onDrag = this.props.onDrag;
-      hand.onDrop = this.props.onDrop;
+      hand.onPinch = this.onPinch;
+      hand.onDragStart = this.onDragStart;
+      hand.onDrag = this.onDrag;
+      hand.onDrop = this.onDrop;
     });
+
+    this.drawings.onUpdate = (objects) => {
+      setTimeout(() => {
+        this.setState({ canvasObjects: objects });
+      }, 0);
+    };
   }
 
   async componentDidMount() {
@@ -75,7 +86,9 @@ export class HandController extends React.Component<Props, State> {
             key={"CANVAS"}
             hands={this.state.hands}
             width={this.canvasWidth}
+            objects={this.state.canvasObjects}
             height={this.canvasHeight}
+            config={this.props.handGizmoConfig}
           />
         )}
         <Camera
@@ -94,6 +107,27 @@ export class HandController extends React.Component<Props, State> {
     );
   }
 
+  onDragStart = (_hand: HandState, x: number, y: number) => {
+    this.props.showFeedback &&
+      this.drawings.addBlip(x, y, { color: [0, 0, 255], lifetime: 200 });
+    this.props.onDragStart && this.props.onDragStart(_hand, x, y);
+  };
+
+  onDrag = (_hand: HandState, x: number, y: number) => {
+    this.props.showFeedback &&
+      this.drawings.addBlip(x, y, {
+        color: [0, 255 - Math.random() * 60, 0],
+        lifetime: 1000,
+      });
+    this.props.onDrag && this.props.onDrag(_hand, x, y);
+  };
+
+  onDrop = (_hand: HandState, x: number, y: number) => {
+    this.props.showFeedback &&
+      this.drawings.addBlip(x, y, { color: [0, 0, 255], lifetime: 200 });
+    this.props.onDrop && this.props.onDrop(_hand, x, y);
+  };
+
   onPinch = (
     hand: HandState,
     x: number,
@@ -101,8 +135,15 @@ export class HandController extends React.Component<Props, State> {
     isPinched: boolean = true
   ) => {
     if (isPinched) {
-      clickElementByCoordinates(x, y, hand.handedness === "Left" ? 0 : 1);
+      this.props.passThroughPinchAsClick &&
+        clickElementByCoordinates(x, y, hand.handedness === "Left" ? 0 : 1);
+
+      this.props.showFeedback &&
+        this.drawings.addBlip(x, y, {
+          lifetime: 200,
+        });
     }
+
     if (this.props.onPinch) {
       this.props.onPinch(hand, x, y, isPinched);
     }

@@ -17,9 +17,9 @@
     "build": "tsc && npm pack"
   },
   "keywords": [],
-  "author": "",
+  "author": "Yura Ilyaev",
   "license": "ISC",
-  "description": "",
+  "description": "A React component that leverages a camera to detect hands",
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.2.22",
