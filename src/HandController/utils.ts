@@ -69,18 +69,24 @@ export const calculateAngleBetweenLines = (
     return angleInDegrees;
 };
 
-export function clickElementByCoordinates(
-    x: number,
-    y: number,
-    detail: number = 0
-) {
-    // Get the element at the specified coordinates.
+export function getClickElement(x: number, y: number) {
     let element = document.elementFromPoint(x, y);
 
     // If the element is a canvas, keep searching for elements behind it
     while (element && element.tagName.toLowerCase() === "canvas") {
         element = element.parentElement;
     }
+
+    return element;
+}
+
+export function clickElementByCoordinates(
+    x: number,
+    y: number,
+    detail: number = 0
+) {
+    // Get the element at the specified coordinates.
+    let element = getClickElement(x, y);
 
     // Create a mouse event to simulate a click.
     const clickEvent = new MouseEvent("click", {

@@ -4,12 +4,18 @@ import { Canvas, HandGizmoConfig } from "./Canvas";
 import { CustomHand, HandState } from "./hands";
 import { HandModels } from "./models";
 import { tensor2d, Tensor } from "@tensorflow/tfjs";
-import { clickElementByCoordinates } from "./utils";
+import { clickElementByCoordinates, getClickElement } from "./utils";
 import { CanvasDrawingState, DrawObjectState } from "./drawings";
 
 interface Props {
   onPoseChange?: (pose: string) => void;
-  onPinch?: (hand: HandState, x: number, y: number, release?: boolean) => void;
+  onPinch?: (
+    hand: HandState,
+    x: number,
+    y: number,
+    release?: boolean,
+    element?: Element | null
+  ) => void;
   onDragStart?: (hand: HandState, x: number, y: number) => void;
   onDrag?: (hand: HandState, x: number, y: number) => void;
   onDrop?: (hand: HandState, x: number, y: number) => void;
@@ -37,6 +43,8 @@ export class HandController extends React.Component<Props, State> {
   cameraHeight = 80;
   canvasWidth = document.body.offsetWidth;
   canvasHeight = document.body.offsetHeight;
+
+  processing = false;
 
   models: HandModels = new HandModels();
   hands: { [s: string]: HandState } = {
@@ -93,7 +101,13 @@ export class HandController extends React.Component<Props, State> {
         )}
         <Camera
           onCapture={this.scanVideo}
-          frequency={50}
+          frequency={
+            this.state.hands.length === 0
+              ? 100
+              : this.state.hands.length === 2
+              ? undefined
+              : 50
+          }
           key={"CAMERA"}
           width={this.cameraWidth}
           showMiniCamera={
@@ -145,15 +159,20 @@ export class HandController extends React.Component<Props, State> {
     }
 
     if (this.props.onPinch) {
-      this.props.onPinch(hand, x, y, isPinched);
+      this.props.onPinch(hand, x, y, isPinched, getClickElement(x, y));
     }
   };
 
   scanVideo = (video: HTMLVideoElement) => {
+    if (this.processing || !this.models.detector) {
+      return;
+    }
     // detect hands
+    this.processing = true;
     this.models.detector
       ?.estimateHands(video, { flipHorizontal: true })
       .then((hands) => {
+        this.processing = false;
         // clear pose for invisible hands
         const visibleHands = hands.map((hand) => hand.handedness) as string[];
         Object.keys(this.hands).forEach((hand) => {
@@ -163,6 +182,7 @@ export class HandController extends React.Component<Props, State> {
         });
 
         if (hands.length === 0 && this.state.hands.length === 0) {
+          this.processing = false;
           return;
         }
 
@@ -185,6 +205,10 @@ export class HandController extends React.Component<Props, State> {
               return hand;
             }),
         });
+        this.processing = false;
+      })
+      .catch((e) => {
+        this.processing = false;
       });
   };
 }
