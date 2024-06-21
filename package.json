@@ -1,6 +1,6 @@
 {
   "name": "react-hand-controller",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -22,9 +22,14 @@
     "controller",
     "tensorflow"
   ],
-  "author": "Yura Ilyaev",
+  "author": "Yura Ilyaev <ilyaev@gmail.com>",
   "license": "ISC",
   "description": "A React component that leverages a camera to detect hands",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ilyaev/react-hand-controller.git"
+  },
+  "homepage": "https://alchemy.pbartz.net/",
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.2.22",
