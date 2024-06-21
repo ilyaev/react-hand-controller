@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clickElementByCoordinates = exports.calculateAngleBetweenLines = exports.vectorSubtract = exports.distance3d = exports.distance = void 0;
+exports.clickElementByCoordinates = exports.getClickElement = exports.calculateAngleBetweenLines = exports.vectorSubtract = exports.distance3d = exports.distance = void 0;
 const distance = (x1, y1, x2, y2) => {
     const xDiff = x2 - x1;
     const yDiff = y2 - y1;
@@ -42,13 +42,18 @@ const calculateAngleBetweenLines = (x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, 
     return angleInDegrees;
 };
 exports.calculateAngleBetweenLines = calculateAngleBetweenLines;
-function clickElementByCoordinates(x, y, detail = 0) {
-    // Get the element at the specified coordinates.
+function getClickElement(x, y) {
     let element = document.elementFromPoint(x, y);
     // If the element is a canvas, keep searching for elements behind it
     while (element && element.tagName.toLowerCase() === "canvas") {
         element = element.parentElement;
     }
+    return element;
+}
+exports.getClickElement = getClickElement;
+function clickElementByCoordinates(x, y, detail = 0) {
+    // Get the element at the specified coordinates.
+    let element = getClickElement(x, y);
     // Create a mouse event to simulate a click.
     const clickEvent = new MouseEvent("click", {
         clientX: x,

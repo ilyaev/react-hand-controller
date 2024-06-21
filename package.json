@@ -1,6 +1,6 @@
 {
   "name": "react-hand-controller",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -14,9 +14,14 @@
   "scripts": {
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "build": "tsc && npm pack"
+    "build": "tsc && npm pack",
+    "release": "release-please"
   },
-  "keywords": [],
+  "keywords": [
+    "react",
+    "controller",
+    "tensorflow"
+  ],
   "author": "Yura Ilyaev",
   "license": "ISC",
   "description": "A React component that leverages a camera to detect hands",
@@ -25,8 +30,8 @@
     "@types/react-dom": "^18.2.22",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "typescript": "^5.4.5",
-    "rimraf": "^5.0.7"
+    "rimraf": "^5.0.7",
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "react": "^18.2.0"

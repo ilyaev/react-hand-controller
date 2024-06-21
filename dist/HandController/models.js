@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HandModels = void 0;
 const hand_pose_detection_1 = require("@tensorflow-models/hand-pose-detection");
 const tfjs_1 = require("@tensorflow/tfjs");
-const default_model_1 = require("./default_model");
+const hand_models_1 = require("./hand_models");
 class HandModels {
     constructor() {
         this.model = hand_pose_detection_1.SupportedModels.MediaPipeHands;
@@ -49,7 +49,7 @@ class HandModels {
     loadPoseModel() {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.poses || !this.poses.length) {
-                (0, default_model_1.initDefaultModel)(this.poseModelName);
+                (0, hand_models_1.initDefaultModel)(this.poseModelName);
                 this.poses = this.loadPoses();
             }
             try {

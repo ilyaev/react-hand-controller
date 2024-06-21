@@ -5,7 +5,7 @@ import { HandModels } from "./models";
 import { CanvasDrawingState, DrawObjectState } from "./drawings";
 interface Props {
     onPoseChange?: (pose: string) => void;
-    onPinch?: (hand: HandState, x: number, y: number, release?: boolean) => void;
+    onPinch?: (hand: HandState, x: number, y: number, release?: boolean, element?: Element | null) => void;
     onDragStart?: (hand: HandState, x: number, y: number) => void;
     onDrag?: (hand: HandState, x: number, y: number) => void;
     onDrop?: (hand: HandState, x: number, y: number) => void;
@@ -13,6 +13,8 @@ interface Props {
     passThroughPinchAsClick?: boolean;
     showFeedback?: boolean;
     handGizmoConfig?: HandGizmoConfig;
+    onHandUpdate?: (hands: HandState[]) => void;
+    onModelLoaded?: () => void;
 }
 interface State {
     hands: HandState[];
@@ -26,6 +28,7 @@ export declare class HandController extends React.Component<Props, State> {
     cameraHeight: number;
     canvasWidth: number;
     canvasHeight: number;
+    processing: boolean;
     models: HandModels;
     hands: {
         [s: string]: HandState;

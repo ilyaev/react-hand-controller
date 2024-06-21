@@ -34,6 +34,7 @@ class HandController extends react_1.default.Component {
         this.cameraHeight = 80;
         this.canvasWidth = document.body.offsetWidth;
         this.canvasHeight = document.body.offsetHeight;
+        this.processing = false;
         this.models = new models_1.HandModels();
         this.hands = {
             Left: new hands_1.HandState(),
@@ -67,14 +68,26 @@ class HandController extends react_1.default.Component {
                         lifetime: 200,
                     });
             }
+            else {
+                this.props.showFeedback &&
+                    this.drawings.addBlip(x, y, {
+                        lifetime: 200,
+                        color: [0, 0, 255],
+                    });
+            }
             if (this.props.onPinch) {
-                this.props.onPinch(hand, x, y, isPinched);
+                this.props.onPinch(hand, x, y, isPinched, (0, utils_1.getClickElement)(x, y));
             }
         };
         this.scanVideo = (video) => {
             var _a;
+            if (this.processing || !this.models.detector) {
+                return;
+            }
             // detect hands
+            this.processing = true;
             (_a = this.models.detector) === null || _a === void 0 ? void 0 : _a.estimateHands(video, { flipHorizontal: true }).then((hands) => {
+                this.processing = false;
                 // clear pose for invisible hands
                 const visibleHands = hands.map((hand) => hand.handedness);
                 Object.keys(this.hands).forEach((hand) => {
@@ -83,6 +96,7 @@ class HandController extends react_1.default.Component {
                     }
                 });
                 if (hands.length === 0 && this.state.hands.length === 0) {
+                    this.processing = false;
                     return;
                 }
                 this.setState({
@@ -98,7 +112,13 @@ class HandController extends react_1.default.Component {
                         hand.setPose(this.models.getPoseLabel(prediction.dataSync()));
                         return hand;
                     }),
+                }, () => {
+                    this.props.onHandUpdate &&
+                        this.props.onHandUpdate(this.state.hands);
                 });
+                this.processing = false;
+            }).catch((e) => {
+                this.processing = false;
             });
         };
         this.cameraWidth = this.canvasWidth * 0.1;
@@ -124,6 +144,7 @@ class HandController extends react_1.default.Component {
                     poses: this.models.poses,
                     loaded: true,
                 });
+                this.props.onModelLoaded && this.props.onModelLoaded();
             }
             catch (e) {
                 this.setState({ poses: [], loaded: true });
@@ -133,7 +154,11 @@ class HandController extends react_1.default.Component {
     render() {
         return (react_1.default.createElement(react_1.default.Fragment, null,
             this.state.hands.length > 0 && (react_1.default.createElement(Canvas_1.Canvas, { key: "CANVAS", hands: this.state.hands, width: this.canvasWidth, objects: this.state.canvasObjects, height: this.canvasHeight, config: this.props.handGizmoConfig })),
-            react_1.default.createElement(Camera_1.Camera, { onCapture: this.scanVideo, frequency: 50, key: "CAMERA", width: this.cameraWidth, showMiniCamera: typeof this.props.showMiniCamera === "undefined"
+            react_1.default.createElement(Camera_1.Camera, { onCapture: this.scanVideo, frequency: this.state.hands.length === 0
+                    ? 100
+                    : this.state.hands.length === 2
+                        ? undefined
+                        : 50, key: "CAMERA", width: this.cameraWidth, showMiniCamera: typeof this.props.showMiniCamera === "undefined"
                     ? true
                     : this.props.showMiniCamera, height: this.cameraHeight })));
     }
