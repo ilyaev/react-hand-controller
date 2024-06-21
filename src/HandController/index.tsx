@@ -23,6 +23,8 @@ interface Props {
   passThroughPinchAsClick?: boolean;
   showFeedback?: boolean;
   handGizmoConfig?: HandGizmoConfig;
+  onHandUpdate?: (hands: HandState[]) => void;
+  onModelLoaded?: () => void;
 }
 
 interface State {
@@ -81,6 +83,7 @@ export class HandController extends React.Component<Props, State> {
         poses: this.models.poses,
         loaded: true,
       });
+      this.props.onModelLoaded && this.props.onModelLoaded();
     } catch (e) {
       this.setState({ poses: [], loaded: true });
     }
@@ -156,6 +159,12 @@ export class HandController extends React.Component<Props, State> {
         this.drawings.addBlip(x, y, {
           lifetime: 200,
         });
+    } else {
+      this.props.showFeedback &&
+        this.drawings.addBlip(x, y, {
+          lifetime: 200,
+          color: [0, 0, 255],
+        });
     }
 
     if (this.props.onPinch) {
@@ -186,27 +195,36 @@ export class HandController extends React.Component<Props, State> {
           return;
         }
 
-        this.setState({
-          hands: hands
-            .map((hand) => {
-              const handState = this.hands[hand.handedness];
-              handState.updateHand(hand as CustomHand);
-              return handState;
-            })
-            .map((hand) => {
-              // detect hand pose
-              const prediction = this.models.poseModel!.predict(
-                tensor2d([hand.serializeHand()])
-              ) as Tensor;
+        this.setState(
+          {
+            hands: hands
+              .map((hand) => {
+                const handState = this.hands[hand.handedness];
+                handState.updateHand(hand as CustomHand);
+                return handState;
+              })
+              .map((hand) => {
+                // detect hand pose
+                const prediction = this.models.poseModel!.predict(
+                  tensor2d([hand.serializeHand()])
+                ) as Tensor;
 
-              hand.setPose(
-                this.models.getPoseLabel(prediction.dataSync() as Float32Array)
-              );
-              return hand;
-            }),
-        });
+                hand.setPose(
+                  this.models.getPoseLabel(
+                    prediction.dataSync() as Float32Array
+                  )
+                );
+                return hand;
+              }),
+          },
+          () => {
+            this.props.onHandUpdate &&
+              this.props.onHandUpdate(this.state.hands);
+          }
+        );
         this.processing = false;
       })
+
       .catch((e) => {
         this.processing = false;
       });

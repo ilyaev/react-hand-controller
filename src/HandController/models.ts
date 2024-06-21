@@ -4,7 +4,7 @@ import {
   HandDetector,
 } from "@tensorflow-models/hand-pose-detection";
 import { loadLayersModel, LayersModel } from "@tensorflow/tfjs";
-import { initDefaultModel } from "./default_model";
+import { initDefaultModel } from "./hand_models";
 
 export interface TrainingRecords {
   [s: string]: number[][];
