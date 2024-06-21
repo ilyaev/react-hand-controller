@@ -23,6 +23,8 @@ export declare class HandState {
     handedness: string;
     poseBuffer: string[];
     poseBufferLength: number;
+    distBuffer: number[];
+    distBufferLength: number;
     onPoseChange?: (pose: string, hand?: HandState) => void;
     onPinch?: (hand: HandState, x: number, y: number, isPinched?: boolean) => void;
     onDragStart?: (hand: HandState, x: number, y: number) => void;
