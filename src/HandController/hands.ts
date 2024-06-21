@@ -33,6 +33,8 @@ export class HandState {
   handedness: string = "";
   poseBuffer: string[] = [];
   poseBufferLength = 10;
+  distBuffer: number[] = [];
+  distBufferLength = 5;
   onPoseChange?: (pose: string, hand?: HandState) => void;
   onPinch?: (
     hand: HandState,
@@ -89,13 +91,18 @@ export class HandState {
     let flag = false;
     switch (newPose) {
       case HAND_POSE.Pinch:
-        if (this.distanceToNode3d(8, 4) < 0.02) {
+        this.distBuffer = this.distBuffer
+          .concat([this.distanceToNode3d(8, 4)])
+          .splice(-this.distBufferLength);
+        const dist =
+          this.distBuffer.reduce((a, b) => a + b) / this.distBuffer.length;
+        if (dist < 0.02) {
           if (!this.isPinching) {
             this.isPinching = true;
             this.pinchTrail = [];
             flag = true;
           }
-        } else {
+        } else if (dist > 0.05) {
           if (this.isPinching) {
             this.isPinching = false;
             flag = true;
